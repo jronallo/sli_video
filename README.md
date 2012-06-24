@@ -62,12 +62,14 @@ I am using this script for an oral history project so all filenames start with a
 the name and then full filename. So if the original filename is "name-title_of_clip.mp4" then you get the
 following directory structure.
 
+```
 ship_directory
 └── name
     └── name-title_of_clip
         ├── name-title_of_clip.mp4
         ├── name-title_of_clip.png
         └── name-title_of_clip.webm
+```
 
 # Author
 
