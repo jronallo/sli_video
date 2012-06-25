@@ -41,7 +41,7 @@ module SliVideo
     def run_handbrake(input, output)
       # The version used is basically the "iPhone & iPod Touch" preset except expanded to allow us to use our own width setting
       # `HandBrakeCLI --preset "iPhone & iPod Touch" --width #{SliVideo::Config.width} --vb 600 --two-pass --turbo --optimize --input "#{input}" --output "#{output}"`
-      `HandBrakeCLI -i #{input} -o #{output} -e x264 -q 20.0 -a 1 -E faac -B 128 -6 dpl2 -R Auto -D 0.0 -f mp4 -X #{SliVideo::Config.width} -m -x cabac=0:ref=2:me=umh:bframes=0:weightp=0:subme=6:8x8dct=0:trellis=0 --vb 600 --two-pass --turbo --optimize`
+      `HandBrakeCLI -i "#{input}" -o "#{output}" -e x264 -q 20.0 -a 1 -E faac -B 128 -6 dpl2 -R Auto -D 0.0 -f mp4 -X #{SliVideo::Config.width} -m -x cabac=0:ref=2:me=umh:bframes=0:weightp=0:subme=6:8x8dct=0:trellis=0 --vb 600 --two-pass --turbo --optimize`
     end
     def to_mp4_tmp
       run_handbrake(processing_filename, tmp_mp4_output_filename)
