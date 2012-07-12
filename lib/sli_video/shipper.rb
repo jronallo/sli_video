@@ -14,9 +14,15 @@ module SliVideo
           FileUtils.mkdir_p(export_directory)
         end
         # copy to remote directory
-        FileUtils.cp(file, File.join(export_directory, basename + extension))
-        published_directory_filename = File.join(SliVideo::Config.workflow_directory, 'published', basename + extension)
-        FileUtils.mv(file, published_directory_filename)
+        begin
+          export_filename = File.join(export_directory, basename + extension)
+          #FileUtils.rm(export_filename) if File.exist?(export_filename)
+          FileUtils.cp(file, export_filename)
+          published_directory_filename = File.join(SliVideo::Config.workflow_directory, 'published', basename + extension)
+          FileUtils.mv(file, published_directory_filename)
+        rescue
+          puts "COULD NOT SHIP: #{export_filename}"
+        end
       end
     end
     
