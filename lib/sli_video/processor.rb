@@ -13,6 +13,7 @@ module SliVideo
       add_endcap_to_mp4
       process_good_mp4
       to_webm
+      FileUtils.rm tmp2_mp4_output_filename
       create_poster_image
       original_to_processed_original
     end
@@ -35,16 +36,15 @@ module SliVideo
     end
     
     def process_good_mp4
-      run_handbrake(tmp2_mp4_output_filename, mp4_output_filename)
-      FileUtils.rm tmp2_mp4_output_filename
+      run_handbrake(tmp2_mp4_output_filename, mp4_output_filename, '20')      
     end
-    def run_handbrake(input, output)
+    def run_handbrake(input, output, quality)
       # The version used is basically the "iPhone & iPod Touch" preset except expanded to allow us to use our own width setting
       # `HandBrakeCLI --preset "iPhone & iPod Touch" --width #{SliVideo::Config.width} --vb 600 --two-pass --turbo --optimize --input "#{input}" --output "#{output}"`
-      `HandBrakeCLI -i "#{input}" -o "#{output}" -e x264 -q 20.0 -a 1 -E faac -B 128 -6 dpl2 -R Auto -D 0.0 -f mp4 -X #{SliVideo::Config.width} -m -x cabac=0:ref=2:me=umh:bframes=0:weightp=0:subme=6:8x8dct=0:trellis=0 --vb 600 --two-pass --turbo --optimize`
+      `HandBrakeCLI -i "#{input}" -o "#{output}" -e x264 -q #{quality} -a 1 -E faac -B 128 -6 dpl2 -R Auto -D 0.0 -f mp4 -X #{SliVideo::Config.width} -m -x cabac=0:ref=2:me=umh:bframes=0:weightp=0:subme=6:8x8dct=0:trellis=0 --vb 600 --two-pass --turbo --optimize`
     end
     def to_mp4_tmp
-      run_handbrake(processing_filename, tmp_mp4_output_filename)
+      run_handbrake(processing_filename, tmp_mp4_output_filename, '0')
     end
     def tmp_mp4_output_filename
       File.join(tmp_directory, video.basename + '_tmp.mp4')
@@ -57,7 +57,7 @@ module SliVideo
     end
     
     def to_webm
-      `ffmpeg -i "#{mp4_output_filename}" "#{webm_output_filename}"`
+      `ffmpeg -quality good -cpu-used 0 -i -qmin 10 -qmax 51 "#{tmp2_mp4_output_filename}" "#{webm_output_filename}"`
     end
     def webm_output_filename
       output_filename('.webm')
