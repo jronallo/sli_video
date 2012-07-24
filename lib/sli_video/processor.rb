@@ -1,7 +1,9 @@
 module SliVideo
   class Processor
     
-    attr_accessor :video
+    # height and width are the values for the converted final version. They are used to help match up with the correct
+    # end screen.
+    attr_accessor :video, :height, :width
     
     def initialize(video)
       @video = video
@@ -9,12 +11,29 @@ module SliVideo
     
     def process
       move_original_to_processing
+      puts "===============done: move_original_to_processing" if verbose?
+
       to_mp4_tmp
+      puts "===============done: to_mp4_tmp" if verbose?
+
+      determine_height_and_width
+      puts "===============done: determine_height_and_width #{height}x#{width}" if verbose?
+
       add_endcap_to_mp4
+      puts "===============done: add_endcap_to_mp4" if verbose?
+
       process_good_mp4
+      puts "===============done: process_good_mp4" if verbose?
+
       to_webm
+      puts "===============done: to_webm" if verbose?
+
       FileUtils.rm tmp2_mp4_output_filename
+      puts "===============done: FileUtils.rm tmp2_mp4_output_filename" if verbose?
+
       create_poster_image
+      puts "===============done: create_poster_image" if verbose?
+
       original_to_processed_original
     end
     
@@ -57,7 +76,7 @@ module SliVideo
     end
     
     def to_webm
-      `ffmpeg -quality good -cpu-used 0 -i -qmin 10 -qmax 51 "#{tmp2_mp4_output_filename}" "#{webm_output_filename}"`
+      `ffmpeg -quality good -qmin 10 -qmax 51 -i "#{tmp2_mp4_output_filename}" "#{webm_output_filename}"`
     end
     def webm_output_filename
       output_filename('.webm')
@@ -96,15 +115,27 @@ module SliVideo
     end
     
     def endcap_filename
-      File.join(workflow_directory, 'endscreen.mpg')
+      File.join(workflow_directory, "endscreen-#{height}x#{width}.mpg")
     end
     
     def workflow_directory
       SliVideo::Config.workflow_directory
     end
+
+    def verbose?
+      SliVideo::Config.verbose
+    end
     
     def original_to_processed_original
       FileUtils.mv(processing_filename, processed_original_filename)
+    end
+
+    def determine_height_and_width      
+      height_and_width_command = %Q{mediainfo --Inform="Video;%Width%x%Height%" "#{tmp_mp4_output_filename}"}
+      puts height_and_width_command if verbose?
+      height_and_width = `#{height_and_width_command}`.chomp
+      puts height_and_width.inspect if verbose?
+      @height, @width = height_and_width.split('x') 
     end
     
   end

@@ -36,6 +36,7 @@ end
 puts "Width: #{SliVideo::Config.width}" if opts.verbose?
 
 SliVideo::Config.workflow_directory = opts[:workflow]
+SliVideo::Config.verbose = opts[:verbose]
 puts "Workflow Directory: #{SliVideo::Config.workflow_directory}" if opts.verbose?
 Dir.glob(File.join(SliVideo::Config.workflow_directory, 'to-process', '*mp4')).each do |video_path|
   puts video_path if opts.verbose?
