@@ -74,3 +74,7 @@ ship_directory
 # Author
 
 Jason Ronallo
+
+# License
+
+See LICENSE.
