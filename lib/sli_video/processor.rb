@@ -35,6 +35,7 @@ module SliVideo
       puts "===============done: create_poster_image" if verbose?
 
       original_to_processed_original
+      puts "=" * 50 if verbose?
     end
     
     def create_poster_image

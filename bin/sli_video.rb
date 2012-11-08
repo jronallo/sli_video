@@ -15,6 +15,7 @@ opts = Slop.parse do
   on :s, :ship=, 'Directory to ship the resulting files to.', true
   on :i, :width=, 'Width of derivatives'
   # on :e, :endcap, 'Add an endscreen.mpg file to the end'
+  on :t, :ship_only, 'Only ship files that are processed. Do not process new files.'
   on :r, :verbose, 'Enable verbose mode'
   on :v, :version, 'Print the version' do
     puts "sli_video version: #{SliVideo::VERSION}"
@@ -27,22 +28,25 @@ if !opts[:workflow]
   exit
 end
 
-
-if opts.width?
-  SliVideo::Config.width = opts[:width]
-else
-  SliVideo::Config.width = '480'
-end
-puts "Width: #{SliVideo::Config.width}" if opts.verbose?
-
 SliVideo::Config.workflow_directory = opts[:workflow]
-SliVideo::Config.verbose = opts[:verbose]
-puts "Workflow Directory: #{SliVideo::Config.workflow_directory}" if opts.verbose?
-Dir.glob(File.join(SliVideo::Config.workflow_directory, 'to-process', '*mp4')).each do |video_path|
-  puts video_path if opts.verbose?
-  video = SliVideo::Video.new(video_path)
-  processor = SliVideo::Processor.new(video)
-  processor.process
+
+if !opts[:ship_only]
+  if opts.width?
+    SliVideo::Config.width = opts[:width]
+  else
+    SliVideo::Config.width = '480'
+  end
+  puts "Width: #{SliVideo::Config.width}" if opts.verbose?
+
+  
+  SliVideo::Config.verbose = opts[:verbose]
+  puts "Workflow Directory: #{SliVideo::Config.workflow_directory}" if opts.verbose?
+  Dir.glob(File.join(SliVideo::Config.workflow_directory, 'to-process', '*mp4')).each do |video_path|
+    puts video_path if opts.verbose?
+    video = SliVideo::Video.new(video_path)
+    processor = SliVideo::Processor.new(video)
+    processor.process
+  end
 end
 
 if opts[:ship]
