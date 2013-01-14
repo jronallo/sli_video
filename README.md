@@ -6,7 +6,7 @@ A tool for creating HTML5-ready video
 
 Sli Video takes a directory of high quality MP4 source videos and converts them into derivatives for use
 with the HTML5 video tag. Derivatives produced for each video include an MP4, using HandBrake, and
-WebM and PNG, using ffmpeg. The MP4 and WebM can be used as sources for the video element and the PNG
+WebM and PNG, using avconv. The MP4 and WebM can be used as sources for the video element and the PNG
 taken from the first frame can be used as the poster image.
 
 Because some browsers do not know about HTML5 video and this script does not create an OGV for other
@@ -17,7 +17,7 @@ browsers that do, the suggestion is to use a Flash fallback in conjunction with 
 The script wraps other commandline tools.
 
 - A *nix system (requires `cat`)
-- ffmpeg
+- avconv
 - HandBrakeCLI
 - There may be other required libraries needed to create H.264 MP4s, WebMs, and PNGs?
 

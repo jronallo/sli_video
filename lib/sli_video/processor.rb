@@ -10,36 +10,50 @@ module SliVideo
     end
     
     def process
+      puts "===============start: move_original_to_processing" if verbose?
       move_original_to_processing
       puts "===============done: move_original_to_processing" if verbose?
 
+      puts "===============start: to_mp4_tmp" if verbose?
       to_mp4_tmp
       puts "===============done: to_mp4_tmp" if verbose?
 
+      puts "===============start: determine_height_and_width" if verbose?
       determine_height_and_width
       puts "===============done: determine_height_and_width #{height}x#{width}" if verbose?
 
+      puts "===============start: add_endcap_to_mp4" if verbose?
       add_endcap_to_mp4
       puts "===============done: add_endcap_to_mp4" if verbose?
 
+      puts "===============start: remove tmp files" if verbose?
+      FileUtils.rm tmp_file_number(1)
+      FileUtils.rm tmp_mp4_output_filename(1)
+      puts "===============done: remove tmp files" if verbose?
+
+      puts "===============start: process_good_mp4" if verbose?
       process_good_mp4
       puts "===============done: process_good_mp4" if verbose?
 
+      puts "===============start: to_webm" if verbose?
       to_webm
       puts "===============done: to_webm" if verbose?
 
-      FileUtils.rm tmp2_mp4_output_filename
+      puts "===============start: FileUtils.rm tmp2_mp4_output_filename" if verbose?
+      FileUtils.rm tmp_file_number(2)
       puts "===============done: FileUtils.rm tmp2_mp4_output_filename" if verbose?
 
+      puts "===============start: create_poster_image" if verbose?
       create_poster_image
       puts "===============done: create_poster_image" if verbose?
 
+      puts "===============start: original_to_processed_original" if verbose?
       original_to_processed_original
       puts "=" * 50 if verbose?
     end
     
     def create_poster_image
-      `ffmpeg -i "#{mp4_output_filename}" -vcodec png -vframes 1 "#{File.join(output_directory, video.basename + '.png')}"`
+      `avconv -loglevel verbose -i "#{mp4_output_filename}" -vcodec png -vframes 1 "#{File.join(output_directory, video.basename + '.png')}"`
     end
     
     def move_original_to_processing
@@ -47,16 +61,23 @@ module SliVideo
     end
     
     # if we are going to add an endcap, then convert to an mpg first so that we can just use cat
-    def add_endcap_to_mp4
-      `ffmpeg -i "#{tmp_mp4_output_filename}" -sameq "#{tmp_file_number(1)}"`
-      `cat "#{tmp_file_number(1)}" "#{endcap_filename}" | ffmpeg -f mpeg -i - -sameq -vcodec mpeg4 "#{tmp2_mp4_output_filename}"`
-      FileUtils.rm tmp_file_number(1)
-      FileUtils.rm tmp_mp4_output_filename
-      # tmp2_mp4_output_filename isn't removed because we still need it around
+    def add_endcap_to_mp4 # -mbd rd -trellis 2 -cmp 2 -subcmp 2 -g 100 -pass 2
+      puts "===============start: create 1.mpg from mp4" if verbose?
+      `avconv -loglevel verbose -strict experimental -same_quant -i "#{tmp_mp4_output_filename(1)}" "#{tmp_file_number(1)}"`
+
+      puts "===============start: concatenate 1.mpg and endscreen into a single 2.mpg" if verbose?
+      `cat "#{tmp_file_number(1)}" "#{endcap_filename}" > "#{tmp_file_number(2)}"`
+
+      #puts "===============start: convert 2.mpg into an mp4" if verbose?
+      # `avconv -loglevel verbose -strict experimental -c:a libfaac -same_quant -i "#{tmp_file_number(2)}" "#{tmp_mp4_output_filename(2)}"`
+      # run_handbrake(tmp_file_number(2), tmp_mp4_output_filename(2), )
+      
+      # tmp_mp4_output_filename(2) isn't removed because we still need it around
     end
     
     def process_good_mp4
-      run_handbrake(tmp2_mp4_output_filename, mp4_output_filename, '20')      
+      # run_handbrake(tmp_mp4_output_filename(2), mp4_output_filename, '20')  
+      run_handbrake(tmp_file_number(2), mp4_output_filename, '20')    
     end
     def run_handbrake(input, output, quality)
       # The version used is basically the "iPhone & iPod Touch" preset except expanded to allow us to use our own width setting
@@ -64,20 +85,18 @@ module SliVideo
       `HandBrakeCLI -i "#{input}" -o "#{output}" -e x264 -q #{quality} -a 1 -E faac -B 128 -6 dpl2 -R Auto -D 0.0 -f mp4 -X #{SliVideo::Config.width} -m -x cabac=0:ref=2:me=umh:bframes=0:weightp=0:subme=6:8x8dct=0:trellis=0 --vb 600 --two-pass --turbo --optimize`
     end
     def to_mp4_tmp
-      run_handbrake(processing_filename, tmp_mp4_output_filename, '0')
+      run_handbrake(processing_filename, tmp_mp4_output_filename(1), '0')
     end
-    def tmp_mp4_output_filename
-      File.join(tmp_directory, video.basename + '_tmp.mp4')
-    end
-    def tmp2_mp4_output_filename
-      File.join(tmp_directory, video.basename + '_tmp2.mp4')
+    def tmp_mp4_output_filename(number=1)
+      File.join(tmp_directory, video.basename + "_tmp#{number}.mp4")
     end
     def mp4_output_filename
       output_filename('.mp4')
     end
     
     def to_webm
-      `ffmpeg -quality good -qmin 10 -qmax 51 -i "#{tmp2_mp4_output_filename}" "#{webm_output_filename}"`
+     # avconv -i 2.mpg                   -c:v libvpx -cpu-used 0 -b:v 600k -maxrate 600k -bufsize 1200k -qmin 10 -qmax 42 -threads 4 -codec:a libvorbis -b:a 128k 2.webm
+      `avconv -i "#{tmp_file_number(2)}" -c:v libvpx -cpu-used 0 -b:v 600k -maxrate 600k -bufsize 1200k -qmin 10 -qmax 42 -threads 4 -codec:a libvorbis -b:a 128k "#{webm_output_filename}"`
     end
     def webm_output_filename
       output_filename('.webm')
@@ -132,7 +151,7 @@ module SliVideo
     end
 
     def determine_height_and_width      
-      height_and_width_command = %Q{mediainfo --Inform="Video;%Width%x%Height%" "#{tmp_mp4_output_filename}"}
+      height_and_width_command = %Q{mediainfo --Inform="Video;%Width%x%Height%" "#{tmp_mp4_output_filename(1)}"}
       puts height_and_width_command if verbose?
       height_and_width = `#{height_and_width_command}`.chomp
       puts height_and_width.inspect if verbose?
