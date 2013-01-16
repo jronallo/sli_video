@@ -27,8 +27,8 @@ module SliVideo
       puts "===============done: add_endcap_to_mp4" if verbose?
 
       puts "===============start: remove tmp files" if verbose?
-      FileUtils.rm tmp_file_number(1)
-      FileUtils.rm tmp_mp4_output_filename(1)
+      FileUtils.rm tmp_file_number(1) unless keep?
+      FileUtils.rm tmp_mp4_output_filename(1) unless keep?
       puts "===============done: remove tmp files" if verbose?
 
       puts "===============start: process_good_mp4" if verbose?
@@ -40,7 +40,7 @@ module SliVideo
       puts "===============done: to_webm" if verbose?
 
       puts "===============start: FileUtils.rm tmp2_mp4_output_filename" if verbose?
-      FileUtils.rm tmp_file_number(2)
+      FileUtils.rm tmp_file_number(2) unless keep?
       puts "===============done: FileUtils.rm tmp2_mp4_output_filename" if verbose?
 
       puts "===============start: create_poster_image" if verbose?
@@ -144,6 +144,10 @@ module SliVideo
 
     def verbose?
       SliVideo::Config.verbose
+    end
+
+    def keep?
+      SliVideo::Config.keep
     end
     
     def original_to_processed_original

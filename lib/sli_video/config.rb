@@ -4,7 +4,7 @@ module SliVideo
     # so just keep it as a self-extended module
     extend self
     
-    attr_accessor :workflow_directory, :ship_directory, :width, :verbose
+    attr_accessor :workflow_directory, :ship_directory, :width, :verbose, :keep
 
   end
 end

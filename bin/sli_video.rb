@@ -17,6 +17,7 @@ opts = Slop.parse do
   # on :e, :endcap, 'Add an endscreen.mpg file to the end'
   on :t, :ship_only, 'Only ship files that are processed. Do not process new files.'
   on :r, :verbose, 'Enable verbose mode'
+  on :k, :keep, 'Boolean to determine wether to keep temporary files around. Useful for debugging.'
   on :v, :version, 'Print the version' do
     puts "sli_video version: #{SliVideo::VERSION}"
     exit
@@ -40,6 +41,8 @@ if !opts[:ship_only]
 
   
   SliVideo::Config.verbose = opts[:verbose]
+  SliVideo::Config.keep    = opts[:keep]
+
   puts "Workflow Directory: #{SliVideo::Config.workflow_directory}" if opts.verbose?
   Dir.glob(File.join(SliVideo::Config.workflow_directory, 'to-process', '*mp4')).each do |video_path|
     puts video_path if opts.verbose?
