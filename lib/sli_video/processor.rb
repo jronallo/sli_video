@@ -76,8 +76,10 @@ module SliVideo
     end
     
     def process_good_mp4
-      # run_handbrake(tmp_mp4_output_filename(2), mp4_output_filename, '20')  
-      run_handbrake(tmp_file_number(2), mp4_output_filename, '20')    
+      `avconv -i #{tmp_file_number(2)} -vcodec libx264 -vprofile baseline -preset slow -b:v 500k -maxrate 500k -bufsize 1000k \
+       -threads 0 -acodec libfaac -b:a 128k #{tmp_mp4_output_filename}`
+      `qt-faststart #{tmp_mp4_output_filename} #{mp4_output_filename}` 
+      #run_handbrake(tmp_file_number(2), mp4_output_filename, '20')    
     end
     def run_handbrake(input, output, quality)
       # The version used is basically the "iPhone & iPod Touch" preset except expanded to allow us to use our own width setting
@@ -96,7 +98,7 @@ module SliVideo
     
     def to_webm
      # avconv -i 2.mpg                   -c:v libvpx -cpu-used 0 -b:v 600k -maxrate 600k -bufsize 1200k -qmin 10 -qmax 42 -threads 4 -codec:a libvorbis -b:a 128k 2.webm
-      `avconv -i "#{tmp_file_number(2)}" -c:v libvpx -cpu-used 0 -b:v 600k -maxrate 600k -bufsize 1200k -qmin 10 -qmax 42 -threads 4 -codec:a libvorbis -b:a 128k "#{webm_output_filename}"`
+      `avconv -i "#{tmp_file_number(2)}" -c:v libvpx -cpu-used 0 -b:v 600k -maxrate 600k -bufsize 1200k -qmin 10 -qmax 42 -threads 0 -codec:a libvorbis -b:a 128k "#{webm_output_filename}"`
     end
     def webm_output_filename
       output_filename('.webm')
