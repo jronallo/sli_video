@@ -67,18 +67,12 @@ module SliVideo
 
       puts "===============start: concatenate 1.mpg and endscreen into a single 2.mpg" if verbose?
       `cat "#{tmp_file_number(1)}" "#{endcap_filename}" > "#{tmp_file_number(2)}"`
-
-      #puts "===============start: convert 2.mpg into an mp4" if verbose?
-      # `avconv -loglevel verbose -strict experimental -c:a libfaac -same_quant -i "#{tmp_file_number(2)}" "#{tmp_mp4_output_filename(2)}"`
-      # run_handbrake(tmp_file_number(2), tmp_mp4_output_filename(2), )
-      
-      # tmp_mp4_output_filename(2) isn't removed because we still need it around
     end
     
     def process_good_mp4
-      `avconv -i #{tmp_file_number(2)} -vcodec libx264 -vprofile baseline -preset slow -b:v 500k -maxrate 500k -bufsize 1000k \
-       -threads 0 -acodec libfaac -b:a 128k #{tmp_mp4_output_filename}`
-      `qt-faststart #{tmp_mp4_output_filename} #{mp4_output_filename}` 
+      `avconv -i "#{tmp_file_number(2)}" -vcodec libx264 -vprofile baseline -preset slow -b:v 500k -maxrate 500k -bufsize 1000k \
+       -threads 0 -acodec libfaac -b:a 128k "#{tmp_mp4_output_filename}"`
+      `qt-faststart "#{tmp_mp4_output_filename}" "#{mp4_output_filename}"` 
       #run_handbrake(tmp_file_number(2), mp4_output_filename, '20')    
     end
     def run_handbrake(input, output, quality)
@@ -87,6 +81,7 @@ module SliVideo
       `HandBrakeCLI -i "#{input}" -o "#{output}" -e x264 -q #{quality} -a 1 -E faac -B 128 -6 dpl2 -R Auto -D 0.0 -f mp4 -X #{SliVideo::Config.width} -m -x cabac=0:ref=2:me=umh:bframes=0:weightp=0:subme=6:8x8dct=0:trellis=0 --vb 600 --two-pass --turbo --optimize`
     end
     def to_mp4_tmp
+      # FIXME: remove handbrake from here too
       run_handbrake(processing_filename, tmp_mp4_output_filename(1), '0')
     end
     def tmp_mp4_output_filename(number=1)
